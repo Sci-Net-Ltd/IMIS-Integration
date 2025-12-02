@@ -1,0 +1,45 @@
+{
+  "id": "78f1a7b4-c3be-4bf1-aa01-e11ee292958d",
+  "name": "IMIS - Integration",
+  "publisher": "Sci-Net Ltd",
+  "version": "1.0.0.0",
+  "brief": "",
+  "description": "IMIS - Integration CQI",
+  "privacyStatement": "",
+  "EULA": "",
+  "help": "",
+  "url": "http://www.sci-net.co.uk",
+  "logo": "src/img/sci-net.png",
+  "dependencies": [
+    {
+      "id": "63ca2fa4-4f03-4f2b-a480-172fef340d3f",
+      "publisher": "Microsoft",
+      "name": "System Application",
+      "version": "26.0.0.0"
+    },
+    {
+      "id": "437dbf0e-84ff-417a-965d-ed2bb9650972",
+      "publisher": "Microsoft",
+      "name": "Base Application",
+      "version": "26.0.0.0"
+    }
+  ],
+  "screenshots": [],
+  "platform": "26.0.0.0",
+  "application": "26.0.0.0",
+  "idRanges": [
+    {
+      "from": 50100,
+      "to": 50149
+    }
+  ],
+  "resourceExposurePolicy": {
+    "allowDebugging": true,
+    "allowDownloadingSource": false,
+    "includeSourceInSymbolFile": false
+  },
+  "runtime": "16.0",
+  "features": [
+    "NoImplicitWith"
+  ]
+}
