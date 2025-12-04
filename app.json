@@ -22,6 +22,12 @@
       "publisher": "Microsoft",
       "name": "Base Application",
       "version": "26.0.0.0"
+    },
+    {
+      "id": "07112ebd-890a-455b-b13b-cd6b4afe07c9",
+      "publisher": "RSM UK",
+      "name": "MOD02 - IMIS Fields",
+      "version": "1.0.0.3"
     }
   ],
   "screenshots": [],
@@ -38,7 +44,7 @@
     "allowDownloadingSource": false,
     "includeSourceInSymbolFile": false
   },
-  "runtime": "16.0",
+  "runtime": "15.2",
   "features": [
     "NoImplicitWith"
   ]
