@@ -87,8 +87,9 @@ codeunit 50146 PTEFieldImportValidations
     procedure EvaluateDecimal(var DecField: Decimal; Val: Text)
     begin
         if Val = '' then
-            exit;
-        Evaluate(DecField, Val);
+            DecField := 0
+        else
+            Evaluate(DecField, Val);
     end;
 
     /// <summary>
@@ -286,6 +287,68 @@ codeunit 50146 PTEFieldImportValidations
                 exit("Sales Document Type"::"Return Order");
             else
                 Error(IncorrectDocType, LineNo, TypeTxt);
+        end;
+    end;
+
+    /// <summary>
+    /// ParseGenJournalDocType.
+    /// </summary>
+    /// <param name="LineNo">Integer.</param>
+    /// <param name="TypeTxt">Text.</param>
+    /// <returns>Enum "Gen. Journal Document Type"</returns>
+    procedure ParseGenJournalDocType(LineNo: Integer; TypeTxt: Text): Enum "Gen. Journal Document Type"
+    var
+        IncorrectDocType: Label 'Incorrect General Journal Document Type on line %1: %2';
+    begin
+        case UpperCase(TypeTxt) of
+            '', ' ':
+                exit("Gen. Journal Document Type"::" ");
+            'PAYMENT':
+                exit("Gen. Journal Document Type"::Payment);
+            'INVOICE':
+                exit("Gen. Journal Document Type"::Invoice);
+            'CREDIT MEMO':
+                exit("Gen. Journal Document Type"::"Credit Memo");
+            'FINANCE CHARGE MEMO':
+                exit("Gen. Journal Document Type"::"Finance Charge Memo");
+            'REMINDER':
+                exit("Gen. Journal Document Type"::Reminder);
+            'REFUND':
+                exit("Gen. Journal Document Type"::Refund);
+            else
+                Error(IncorrectDocType, LineNo, TypeTxt);
+        end;
+    end;
+
+    /// <summary>
+    /// ParseGenAccountType.
+    /// </summary>
+    /// <param name="LineNo">Integer.</param>
+    /// <param name="TypeTxt">Text.</param>
+    /// <returns>Enum "Gen. Journal Account Type"</returns>
+    procedure ParseGenAccountType(LineNo: Integer; TypeTxt: Text): Enum "Gen. Journal Account Type"
+    var
+        IncorrectAccType: Label 'Incorrect Gen. Journal Account Type on line %1: %2';
+    begin
+        case UpperCase(TypeTxt) of
+            'G/L ACCOUNT':
+                exit("Gen. Journal Account Type"::"G/L Account");
+            'CUSTOMER':
+                exit("Gen. Journal Account Type"::Customer);
+            'VENDOR':
+                exit("Gen. Journal Account Type"::Vendor);
+            'BANK ACCOUNT':
+                exit("Gen. Journal Account Type"::"Bank Account");
+            'FIXED ASSET':
+                exit("Gen. Journal Account Type"::"Fixed Asset");
+            'IC PARTNER':
+                exit("Gen. Journal Account Type"::"IC Partner");
+            'EMPLOYEE':
+                exit("Gen. Journal Account Type"::Employee);
+            'ALLOCATION ACCOUNT':
+                exit("Gen. Journal Account Type"::"Allocation Account");
+            else
+                Error(IncorrectAccType, LineNo, TypeTxt);
         end;
     end;
 }
