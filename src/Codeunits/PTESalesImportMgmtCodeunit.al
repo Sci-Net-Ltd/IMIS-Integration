@@ -14,13 +14,14 @@ codeunit 50148 PTESalesImportMgmt
         SalesLine: Record "Sales Line";
         DocType: Enum "Sales Document Type";
         DocNo: Code[20];
-        ExternalDocNo: Text[35];
-        PrevExternalDocNo: Text[35];
-        DocTypeText: Text;
-        LineNoInt: Integer;
-        ValText: Text;
+        CustomerNo: Code[20];
+        PrevCustomerNo: Code[20];
         ValDecimal: Decimal;
+        LineNoInt: Integer;
         DocCount: Integer;
+        DocTypeText: Text;
+        ValText: Text;
+        ValDate: Date;
     begin
         if not UploadIntoStream('Select Sales Order CSV', '', 'CSV Files (*.csv)|*.csv', FileName, InStr) then
             exit;
@@ -30,19 +31,23 @@ codeunit 50148 PTESalesImportMgmt
         for LineNo := 2 to CSVBuffer.GetNumberOfLines() do begin
             DocTypeText := PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 21);
             DocType := PTEFieldImportValidations.ParseDocumentType(LineNo, DocTypeText);
-            ExternalDocNo := PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 1);
+            CustomerNo := PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 2);
 
-            if ExternalDocNo <> PrevExternalDocNo then begin
-                PrevExternalDocNo := ExternalDocNo;
+            if CustomerNo <> PrevCustomerNo then begin
+                PrevCustomerNo := CustomerNo;
                 Clear(SalesHeader);
                 SalesHeader.Init();
                 SalesHeader.Validate("Document Type", DocType);
-                SalesHeader.Validate("External Document No.", ExternalDocNo);
+                SalesHeader.Validate("External Document No.", PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 1));
                 SalesHeader.Insert(true);
                 DocNo := SalesHeader."No.";
-                SalesHeader.Validate("Sell-to Customer No.", PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 2));
-                PTEFieldImportValidations.EvaluateDate(SalesHeader."Document Date", PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 3), LineNo);
-                PTEFieldImportValidations.EvaluateDate(SalesHeader."Posting Date", PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 4), LineNo);
+                SalesHeader.Validate("Sell-to Customer No.", CustomerNo);
+                PTEFieldImportValidations.EvaluateDate(ValDate, PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 3), LineNo);
+                SalesHeader.Validate("Document Date", ValDate);
+                SalesHeader.Validate("Shipment Date", ValDate);
+                PTEFieldImportValidations.EvaluateDate(ValDate, PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 4), LineNo);
+                SalesHeader.Validate("Posting Date", ValDate);
+                SalesHeader.Validate("Due Date", ValDate);
                 SalesHeader.Validate("Your Reference", PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 5));
                 SalesHeader.Modify(true);
                 DocCount += 1;
@@ -63,6 +68,7 @@ codeunit 50148 PTESalesImportMgmt
             SalesLine.Validate(Quantity, ValDecimal);
             PTEFieldImportValidations.EvaluateDecimal(ValDecimal, PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 8));
             SalesLine.Validate("Unit Price", ValDecimal);
+
             // TODO: Getting an error because of this line on SalesLine.Insert trigger (code is not accessible to check the reason)
             //SalesLine.Validate("Deferral Code", PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 18));
 
@@ -78,6 +84,6 @@ codeunit 50148 PTESalesImportMgmt
             if SalesLine.Insert(true) then;
         end;
 
-        Message('Import Complete. Processed approx %1 orders.', DocCount);
+        Message('Import Complete. Processed %1 orders.', DocCount);
     end;
 }

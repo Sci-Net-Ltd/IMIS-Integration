@@ -12,13 +12,14 @@ codeunit 50147 PTEPaymentImportMgmt
         PTEFieldImportValidations: Codeunit PTEFieldImportValidations;
         GenJournalDocType: Enum "Gen. Journal Document Type";
         GenAccountType: Enum "Gen. Journal Account Type";
-        FileName: Text;
-        ValText: Text;
+        InStr: InStream;
         ValDecimal: Decimal;
         LineNo: Integer;
         NextLineNo: Integer;
         EntryCount: Integer;
-        InStr: InStream;
+        ValDate: Date;
+        FileName: Text;
+        ValText: Text;
     begin
         if not UploadIntoStream('Select Payment CSV', '', 'CSV Files (*.csv)|*.csv', FileName, InStr) then
             exit;
@@ -42,7 +43,8 @@ codeunit 50147 PTEPaymentImportMgmt
                 GenJnlLine.Validate("Journal Batch Name", BatchName);
                 GenJnlLine.Validate("Line No.", NextLineNo);
 
-                PTEFieldImportValidations.EvaluateDate(GenJnlLine."Posting Date", PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 1), LineNo);
+                PTEFieldImportValidations.EvaluateDate(ValDate, PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 1), LineNo);
+                GenJnlLine.Validate("Posting Date", ValDate);
 
                 ValText := PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 2);
                 GenJournalDocType := PTEFieldImportValidations.ParseGenJournalDocType(LineNo, ValText);
@@ -90,6 +92,7 @@ codeunit 50147 PTEPaymentImportMgmt
                 // PTEFieldImportValidations.EvaluateBoolean(GenJnlLine."Cp Pays", PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 15), LineNo);
 
                 GenJnlLine.Insert(true);
+                Commit();
 
                 NextLineNo += 10000;
                 EntryCount += 1;

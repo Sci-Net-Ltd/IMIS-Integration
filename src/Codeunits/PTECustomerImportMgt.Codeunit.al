@@ -9,20 +9,18 @@ codeunit 50149 PTECustomerImportMgt
     procedure ImportCustomersFromCSV()
     var
         CSVBuffer: Record "CSV Buffer" temporary;
-        PTEFieldImportValidations: Codeunit PTEFieldImportValidations;
-        FileName: Text;
-        InStr: InStream;
-        LineNo: Integer;
         Customer: Record Customer;
+        PTEFieldImportValidations: Codeunit PTEFieldImportValidations;
+        InStr: InStream;
         CustomerId: Code[20];
-        ValText: Text;
-        IncorrectDocType: Label 'Please fill Customer ID on line %1.';
+        LineNo: Integer;
         UpdatedCount: Integer;
         InsertedCount: Integer;
+        ValDate: Date;
+        FileName: Text;
+        ValText: Text;
+        IncorrectDocType: Label 'Please fill Customer ID on line %1.';
     begin
-        // TODO: Below commented lines are for future use.
-        // During development, it was unclear where to map CSV cells in the Business Central.
-
         if not UploadIntoStream('Select CSV File', '', 'CSV Files (*.csv)|*.csv', FileName, InStr) then
             exit;
 
@@ -49,21 +47,29 @@ codeunit 50149 PTECustomerImportMgt
 
             PTEFieldImportValidations.EvaluateBoolean(Customer."CP Individual MOD02", PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 3), LineNo);
             PTEFieldImportValidations.EvaluateBoolean(Customer."CP Payes MOD02", PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 4), LineNo);
-            // ValText := GetCellValue(CSVBuffer, LineNo, 5);
-            // if ValText <> '' then
-            //     Customer.Validate("Geography Revenue", CopyStr(ValText, 1, 20));
+            ValText := PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 5);
+            if ValText <> '' then
+                Customer.Validate("Ship-to Code", ValText);
+
             ValText := PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 6);
             if ValText <> '' then begin
                 Customer.Validate("VAT Bus. Posting Group", ValText);
                 Customer.Validate("Gen. Bus. Posting Group", ValText);
             end;
-            // ValText := GetCellValue(CSVBuffer, LineNo, 7);
-            // if ValText <> '' then
-            //     Customer.Validate("Geography Membership", CopyStr(ValText, 1, 20));
-            PTEFieldImportValidations.EvaluateDate(Customer."CQI Mem Start MOD02", PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 8), LineNo);
+
+            ValText := PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 7);
+            if ValText <> '' then
+                Customer.Validate("Country/Region Code", ValText);
+
+            Customer.Validate("Prices Including VAT", true);
+            PTEFieldImportValidations.EvaluateDate(ValDate, PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 8), LineNo);
+            Customer.Validate("CQI Mem Start MOD02", ValDate);
+            PTEFieldImportValidations.EvaluateDate(ValDate, PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 11), LineNo);
+            Customer.Validate("IRCA Start Date MOD02", ValDate);
+
+            // TODO: Below commented lines are for future use. During development, it was unclear where to map CSV cells in the Business Central.
             // Customer.Validate("Cqi Mem Grade", CopyStr(GetCellValue(CSVBuffer, LineNo, 9), 1, 50));
             // Customer.Validate("Cqi Home Branch", CopyStr(GetCellValue(CSVBuffer, LineNo, 10), 1, 50));
-            PTEFieldImportValidations.EvaluateDate(Customer."IRCA Start Date MOD02", PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 11), LineNo);
             // Customer.Validate("Irca Aerospace Grade", CopyStr(GetCellValue(CSVBuffer, LineNo, 12), 1, 50));
             // Customer.Validate("Irca Bcms Grade", CopyStr(GetCellValue(CSVBuffer, LineNo, 13), 1, 50));
             // Customer.Validate("Irca Eicc Grade", CopyStr(GetCellValue(CSVBuffer, LineNo, 14), 1, 50));
@@ -76,8 +82,8 @@ codeunit 50149 PTECustomerImportMgt
             // Customer.Validate("Irca Pqms Grade", CopyStr(GetCellValue(CSVBuffer, LineNo, 21), 1, 50));
             // Customer.Validate("Irca Qms Grade", CopyStr(GetCellValue(CSVBuffer, LineNo, 22), 1, 50));
             // Customer.Validate("Irca Ss Grade", CopyStr(GetCellValue(CSVBuffer, LineNo, 23), 1, 50));
-
             Customer.Modify(true);
+            Commit();
         end;
 
         Message('Import Complete.\ Records Created: %1\ Records Updated: %2', InsertedCount, UpdatedCount);
