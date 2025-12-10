@@ -133,33 +133,53 @@ codeunit 50146 PTEFieldImportValidations
 
         DimMgt.GetDimensionSet(TempDimSetEntry, SalesLine."Dimension Set ID");
 
-        // Process Index 4 from "Dimensions" cell in CSV, if this is '#', get Life Cycle (column 19) from CSV
+        // Process Index 4 from "Dimensions" cell in CSV
         if DimParts.Count() >= 4 then begin
-            ResolvedDimVal := ResolveValue(DimParts.Get(4), CSVBuffer, LineNo, 19);
-            AutoAssignDimension(TempDimSetEntry, ResolvedDimVal, GLSetup);
+            ResolvedDimVal := DimParts.Get(4);
+            if ResolveValue(ResolvedDimVal, CSVBuffer, LineNo, 0) then
+                AutoAssignDimension(TempDimSetEntry, ResolvedDimVal, GLSetup);
         end;
 
-        // Process Index 5. Always expecting G/L Account Number on this Index, so no Column lookup
-        if DimParts.Count() >= 5 then
-            AutoAssignDimension(TempDimSetEntry, DimParts.Get(5), GLSetup);
+        // Process Index 5 from "Dimensions" cell in CSV
+        if DimParts.Count() >= 5 then begin
+            ResolvedDimVal := DimParts.Get(5);
+            if ResolveValue(ResolvedDimVal, CSVBuffer, LineNo, 0) then
+                AutoAssignDimension(TempDimSetEntry, DimParts.Get(5), GLSetup);
+        end;
 
-        // Process Index 6 from "Dimensions" cell in CSV, if this is '#', get Community (column 20) from CSV
+        // Process Index 6 from "Dimensions" cell in CSV
         if DimParts.Count() >= 6 then begin
-            ResolvedDimVal := ResolveValue(DimParts.Get(6), CSVBuffer, LineNo, 20);
-            AutoAssignDimension(TempDimSetEntry, ResolvedDimVal, GLSetup);
+            ResolvedDimVal := DimParts.Get(6);
+            if ResolveValue(ResolvedDimVal, CSVBuffer, LineNo, 0) then
+                AutoAssignDimension(TempDimSetEntry, ResolvedDimVal, GLSetup);
         end;
 
-        // Process Index 7 from "Dimensions" cell in CSV, if this is '#', get Member Type (column 13) from CSV
+        // Process Index 7 from "Dimensions" cell in CSV, if this is '#'
         if DimParts.Count() >= 7 then begin
-            ResolvedDimVal := ResolveValue(DimParts.Get(7), CSVBuffer, LineNo, 13); // 13 = Member Type
-            AutoAssignDimension(TempDimSetEntry, ResolvedDimVal, GLSetup);
+            ResolvedDimVal := DimParts.Get(7);
+            if ResolveValue(ResolvedDimVal, CSVBuffer, LineNo, 0) then
+                AutoAssignDimension(TempDimSetEntry, ResolvedDimVal, GLSetup);
         end;
 
         // Process Index 8+ (Standard Values)
-        if DimParts.Count() >= 8 then
-            AutoAssignDimension(TempDimSetEntry, DimParts.Get(8), GLSetup);
-        if DimParts.Count() >= 9 then
-            AutoAssignDimension(TempDimSetEntry, DimParts.Get(9), GLSetup);
+        if DimParts.Count() >= 8 then begin
+            ResolvedDimVal := DimParts.Get(8);
+            if ResolveValue(ResolvedDimVal, CSVBuffer, LineNo, 0) then
+                AutoAssignDimension(TempDimSetEntry, ResolvedDimVal, GLSetup);
+        end;
+        if DimParts.Count() >= 9 then begin
+            ResolvedDimVal := DimParts.Get(9);
+            if ResolveValue(ResolvedDimVal, CSVBuffer, LineNo, 0) then
+                AutoAssignDimension(TempDimSetEntry, ResolvedDimVal, GLSetup);
+        end;
+
+        // Revalidate specific dimensions based on CSV columns
+        if ResolveValue(ResolvedDimVal, CSVBuffer, LineNo, 19) then
+            AutoAssignDimension(TempDimSetEntry, ResolvedDimVal, GLSetup);
+        if ResolveValue(ResolvedDimVal, CSVBuffer, LineNo, 20) then
+            AutoAssignDimension(TempDimSetEntry, ResolvedDimVal, GLSetup);
+        if ResolveValue(ResolvedDimVal, CSVBuffer, LineNo, 13) then
+            AutoAssignDimension(TempDimSetEntry, ResolvedDimVal, GLSetup);
 
         SalesLine."Dimension Set ID" := DimMgt.GetDimensionSetID(TempDimSetEntry);
     end;
@@ -167,18 +187,21 @@ codeunit 50146 PTEFieldImportValidations
     /// <summary>
     /// ResolveValue.
     /// </summary>
-    /// <param name="Val">Text.</param>
+    /// <param name="Val">VAR Text.</param>
     /// <param name="CSVBuffer">VAR Record "CSV Buffer".</param>
     /// <param name="RowNo">Integer.</param>
     /// <param name="ColNo">Integer.</param>
-    /// <returns>Text.</returns>
+    /// <returns>Boolean.</returns>
     // Helper: Returns either the explicit value OR the value from the CSV column if '#'
-    local procedure ResolveValue(Val: Text; var CSVBuffer: Record "CSV Buffer"; RowNo: Integer; ColNo: Integer): Text
+    local procedure ResolveValue(var Val: Text; var CSVBuffer: Record "CSV Buffer"; RowNo: Integer; ColNo: Integer): Boolean
     begin
-        if (Val = '#') and (ColNo > 0) then
-            exit(GetCellValue(CSVBuffer, RowNo, ColNo));
+        if ColNo <> 0 then // If column number is provided, fetch value from CSV
+            Val := GetCellValue(CSVBuffer, RowNo, ColNo);
 
-        exit(Val);
+        if (Val = '') or (Val = '#') or (UpperCase(Val) = 'N/A') then
+            exit(false);
+
+        exit(true);
     end;
 
     /// <summary>
@@ -250,7 +273,8 @@ codeunit 50146 PTEFieldImportValidations
     /// <param name="DimVal">Text.</param>
     local procedure UpdateDimSet(var TempDimSetEntry: Record "Dimension Set Entry" temporary; DimCode: Code[20]; DimVal: Text)
     begin
-        if TempDimSetEntry.Get(TempDimSetEntry."Dimension Set ID", DimCode) then begin
+        TempDimSetEntry.SetRange("Dimension Code", DimCode);
+        if TempDimSetEntry.FindFirst() then begin
             TempDimSetEntry.Validate("Dimension Value Code", CopyStr(DimVal, 1, 20));
             TempDimSetEntry.Modify();
         end else begin

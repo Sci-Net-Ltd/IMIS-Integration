@@ -10,6 +10,7 @@ codeunit 50149 PTECustomerImportMgt
     var
         CSVBuffer: Record "CSV Buffer" temporary;
         Customer: Record Customer;
+        ShiptoAddress: Record "Ship-to Address";
         PTEFieldImportValidations: Codeunit PTEFieldImportValidations;
         InStr: InStream;
         CustomerId: Code[20];
@@ -48,8 +49,16 @@ codeunit 50149 PTECustomerImportMgt
             PTEFieldImportValidations.EvaluateBoolean(Customer."CP Individual MOD02", PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 3), LineNo);
             PTEFieldImportValidations.EvaluateBoolean(Customer."CP Payes MOD02", PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 4), LineNo);
             ValText := PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 5);
-            if ValText <> '' then
-                Customer.Validate("Ship-to Code", ValText);
+            if ValText <> '' then begin
+                if not ShiptoAddress.Get(CustomerId, ValText) then begin
+                    ShiptoAddress.Init();
+                    ShiptoAddress.Validate("Customer No.", CustomerId);
+                    ShiptoAddress.Validate(Code, ValText);
+                    ShiptoAddress.Insert(true);
+                end;
+
+                Customer.Validate("Ship-to Code", ShiptoAddress.Code);
+            end;
 
             ValText := PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 6);
             if ValText <> '' then begin
@@ -67,7 +76,7 @@ codeunit 50149 PTECustomerImportMgt
             PTEFieldImportValidations.EvaluateDate(ValDate, PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 11), LineNo);
             Customer.Validate("IRCA Start Date MOD02", ValDate);
 
-            // TODO: Below commented lines are for future use. During development, it was unclear where to map CSV cells in the Business Central.
+            // During development, it was unclear where to map CSV cells in the Business Central.
             // Customer.Validate("Cqi Mem Grade", CopyStr(GetCellValue(CSVBuffer, LineNo, 9), 1, 50));
             // Customer.Validate("Cqi Home Branch", CopyStr(GetCellValue(CSVBuffer, LineNo, 10), 1, 50));
             // Customer.Validate("Irca Aerospace Grade", CopyStr(GetCellValue(CSVBuffer, LineNo, 12), 1, 50));
