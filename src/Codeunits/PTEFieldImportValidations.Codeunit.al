@@ -11,11 +11,17 @@ codeunit 50146 PTEFieldImportValidations
     /// <param name="ColNo">Integer.</param>
     /// <returns>Text.</returns>
     procedure GetCellValue(var CSVBuffer: Record "CSV Buffer"; RowNo: Integer; ColNo: Integer): Text
+    var
+        Value: Text;
     begin
         if CSVBuffer.Get(RowNo, ColNo) then
-            exit(CSVBuffer.Value);
+            value := CSVBuffer.Value;
 
-        exit('');
+        if (Value.StartsWith('"')) and (Value.EndsWith('"')) then begin
+            Value := DelChr(Value, '<>', '"');
+            exit(Value);
+        end else
+            exit('');
     end;
 
     /// <summary>
