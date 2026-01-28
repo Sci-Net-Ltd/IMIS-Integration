@@ -69,6 +69,7 @@ codeunit 50147 PTEPaymentImportMgmt
                 CustLedgerEntry.SetRange("Customer No.", GenJnlLine."Account No.");
                 CustLedgerEntry.SetRange("Your Reference", GenJnlLine."External Document No.");
                 CustLedgerEntry.SetRange("External Document No.", GenJnlLine."Document No.");
+                CustLedgerEntry.SetRange(Open, true);
                 if CustLedgerEntry.FindFirst() then begin
                     GenJnlLine.Validate("Applies-to Doc. Type", CustLedgerEntry."Document Type");
                     GenJnlLine.Validate("Applies-to Doc. No.", CustLedgerEntry."Document No.");
@@ -78,7 +79,7 @@ codeunit 50147 PTEPaymentImportMgmt
 
                 ValText := PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 11);
                 if ValText <> '' then
-                    GenJnlLine.Validate("Payment Method Code", ValText);
+                    GenJnlLine."Payment Method Code" := ValText;
 
                 if Customer.Get(GenJnlLine."Account No.") then
                     GenJnlLine.Validate("Country/Region Code", Customer."Country/Region Code")

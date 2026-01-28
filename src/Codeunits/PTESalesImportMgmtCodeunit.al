@@ -52,6 +52,7 @@ codeunit 50148 PTESalesImportMgmt
                 SalesHeader.Validate("Your Reference", PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 5));
                 SalesHeader.Modify(true);
                 DocCount += 1;
+                LineNoInt := 0;
             end;
 
             Clear(SalesLine);
@@ -59,8 +60,8 @@ codeunit 50148 PTESalesImportMgmt
             SalesLine.Validate("Document Type", DocType);
             SalesLine.Validate("Document No.", DocNo);
 
-            Evaluate(LineNoInt, PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 9));
-            SalesLine."Line No." := LineNoInt * 10000;
+            LineNoInt += 10000;
+            SalesLine."Line No." := LineNoInt;
 
             SalesLine.Validate(Type, SalesLine.Type::"G/L Account");
             PTEFieldImportValidations.ParseAndSetDimensions(SalesLine, CSVBuffer, PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 11), lineNo);
