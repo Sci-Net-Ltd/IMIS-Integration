@@ -9,7 +9,7 @@ pageextension 50149 PTECustomerListExt extends "Customer List"
         {
             action(ImportCustomers)
             {
-                Caption = 'Import IMIS Customers';
+                Caption = 'Import IMIS Customers (v2)';
                 ToolTip = 'Import IMIS customer data from a CSV file. Updates existing customers or creates new ones.';
                 ApplicationArea = All;
                 Promoted = true;

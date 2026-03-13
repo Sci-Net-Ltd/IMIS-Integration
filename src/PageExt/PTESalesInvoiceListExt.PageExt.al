@@ -9,7 +9,7 @@ pageextension 50148 PTESalesInvoiceListExt extends "Sales Invoice List"
         {
             action(ImportSalesOrders)
             {
-                Caption = 'Import IMIS Sales Invoices';
+                Caption = 'Import IMIS Sales Invoices (v2)';
                 ToolTip = 'Import IMIS Sales Invoices and Lines from a CSV file.';
                 ApplicationArea = All;
                 Promoted = true;

@@ -9,7 +9,7 @@ pageextension 50147 PTECashReceiptJournalExt extends "Cash Receipt Journal"
         {
             action(ImportPayments)
             {
-                Caption = 'Import IMIS Payments';
+                Caption = 'Import IMIS Payments (v2)';
                 ToolTip = 'Import IMIS payments data from a CSV file.';
                 ApplicationArea = All;
                 Promoted = true;
