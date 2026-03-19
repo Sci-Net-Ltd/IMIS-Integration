@@ -67,9 +67,9 @@ codeunit 50148 PTESalesImportMgmt
             PTEFieldImportValidations.ParseAndSetDimensions(SalesLine, CSVBuffer, PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 11), lineNo);
 
             PTEFieldImportValidations.EvaluateDecimal(ValDecimal, PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 7));
-            SalesLine.Validate(Quantity, ValDecimal);
+            SalesLine.Validate(Quantity, Abs(ValDecimal));
             PTEFieldImportValidations.EvaluateDecimal(ValDecimal, PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 8));
-            SalesLine.Validate("Unit Price", ValDecimal);
+            SalesLine.Validate("Unit Price", Abs(ValDecimal));
             DeferralCode := PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 18);
             SalesLine.Validate("Deferral Code", DeferralCode);
 

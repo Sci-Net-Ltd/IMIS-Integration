@@ -15,8 +15,10 @@ codeunit 50147 PTEPaymentImportMgmt
         InStr: InStream;
         ValDecimal: Decimal;
         LineNo: Integer;
-        NextLineNo: Integer;
-        EntryCount: Integer;
+        NextPayLineNo: Integer;
+        NextRefundLineNo: Integer;
+        PayEntryCount: Integer;
+        RefundEntryCount: Integer;
         ValDate: Date;
         FileName: Text;
         ValText: Text;
@@ -26,28 +28,47 @@ codeunit 50147 PTEPaymentImportMgmt
 
         CSVBuffer.LoadDataFromStream(InStr, ',');
 
+        GenJnlLine.Reset();
         GenJnlLine.SetRange("Journal Template Name", TemplateName);
-        GenJnlLine.SetRange("Journal Batch Name", BatchName);
+        GenJnlLine.SetRange("Journal Batch Name", 'IMIS_PAY');
         if GenJnlLine.FindLast() then
-            NextLineNo := GenJnlLine."Line No." + 10000
+            NextPayLineNo := GenJnlLine."Line No." + 10000
         else
-            NextLineNo := 10000;
+            NextPayLineNo := 10000;
+
+        GenJnlLine.Reset();
+        GenJnlLine.SetRange("Journal Template Name", TemplateName);
+        GenJnlLine.SetRange("Journal Batch Name", 'IMIS_REF');
+        if GenJnlLine.FindLast() then
+            NextRefundLineNo := GenJnlLine."Line No." + 10000
+        else
+            NextRefundLineNo := 10000;
 
         for LineNo := 2 to CSVBuffer.GetNumberOfLines() do begin
             ValText := PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 3);
 
             if ValText <> '' then begin
                 Clear(GenJnlLine);
+                ValText := PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 2);
+                GenJournalDocType := PTEFieldImportValidations.ParseGenJournalDocType(LineNo, ValText);
+
                 GenJnlLine.Init();
                 GenJnlLine.Validate("Journal Template Name", TemplateName);
-                GenJnlLine.Validate("Journal Batch Name", BatchName);
-                GenJnlLine.Validate("Line No.", NextLineNo);
+                if GenJournalDocType = GenJournalDocType::Payment then begin
+                    GenJnlLine.Validate("Journal Batch Name", 'IMIS_PAY');
+                    GenJnlLine.Validate("Line No.", NextPayLineNo);
+                    NextPayLineNo += 10000;
+                    PayEntryCount += 1;
+                end else if GenJournalDocType = GenJournalDocType::Refund then begin
+                    GenJnlLine.Validate("Journal Batch Name", 'IMIS_REF');
+                    GenJnlLine.Validate("Line No.", NextRefundLineNo);
+                    NextRefundLineNo += 10000;
+                    RefundEntryCount += 1;
+                end else
+                    Error('Invalid Document Type in line %1. Expected Payment or Refund.', LineNo);
 
                 PTEFieldImportValidations.EvaluateDate(ValDate, PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 1), LineNo);
                 GenJnlLine.Validate("Posting Date", ValDate);
-
-                ValText := PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 2);
-                GenJournalDocType := PTEFieldImportValidations.ParseGenJournalDocType(LineNo, ValText);
                 GenJnlLine.Validate("Document Type", GenJournalDocType);
                 GenJnlLine.Validate("Document No.", PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 3));
 
@@ -94,12 +115,9 @@ codeunit 50147 PTEPaymentImportMgmt
 
                 GenJnlLine.Insert(true);
                 Commit();
-
-                NextLineNo += 10000;
-                EntryCount += 1;
             end;
         end;
 
-        Message('Import Complete. Created %1 lines in batch %2.', EntryCount, BatchName);
+        Message('Import Complete.\Created %1 payment lines in batch %2.\Created %3 refund lines in batch %4.', PayEntryCount, 'IMIS_PAY', RefundEntryCount, 'IMIS_REF');
     end;
 }
