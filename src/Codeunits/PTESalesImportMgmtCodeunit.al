@@ -14,6 +14,7 @@ codeunit 50148 PTESalesImportMgmt
         PrevCustomerNo: Code[20];
         DeferralCode: Code[10];
         DocType: Enum "Sales Document Type";
+        PrevDocType: Enum "Sales Document Type";
         ValDecimal: Decimal;
         LineNo: Integer;
         LineNoInt: Integer;
@@ -34,8 +35,9 @@ codeunit 50148 PTESalesImportMgmt
             DocType := PTEFieldImportValidations.ParseDocumentType(LineNo, DocTypeText);
             CustomerNo := PTEFieldImportValidations.GetCellValue(CSVBuffer, LineNo, 2);
 
-            if CustomerNo <> PrevCustomerNo then begin
+            if (CustomerNo <> PrevCustomerNo) or (DocType <> PrevDocType) then begin
                 PrevCustomerNo := CustomerNo;
+                PrevDocType := DocType;
                 Clear(SalesHeader);
                 SalesHeader.Init();
                 SalesHeader.Validate("Document Type", DocType);
